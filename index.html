@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>숫자 뒤의 인간: 타이타닉 데이터 & 윤리 분석 플랫폼</title>
+  <title>타이타닉 데이터 분석 및 의사결정 트리 플랫폼</title>
+  
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
@@ -13,7 +14,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   
   <script>
     tailwind.config = {
@@ -21,24 +22,25 @@
         extend: {
           fontFamily: {
             sans: ['Noto Sans KR', 'sans-serif'],
-            serif: ['Cormorant Garamond', 'serif'],
+            mono: ['Fira Code', 'monospace'],
           },
           colors: {
-            ocean: {
-              950: '#070a13',
-              900: '#0b132b',
-              800: '#1c2541',
-              700: '#3a506b',
-              100: '#eef1f6',
+            midnight: {
+              950: '#060a13',
+              900: '#0a1120',
+              800: '#121e36',
+              700: '#203254',
+              600: '#2e4570',
             },
-            gold: {
-              400: '#ffd275',
-              500: '#e5c158',
-              600: '#c5a043',
+            cyanAccent: {
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
             },
-            tealAccent: {
-              400: '#48cae4',
-              500: '#00b4d8',
+            amberAccent: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
             }
           }
         }
@@ -47,330 +49,293 @@
   </script>
   
   <style>
-    /* Premium animations and styling */
     body {
-      background: linear-gradient(135deg, #070a13 0%, #0b132b 50%, #1c2541 100%);
-      color: #eef1f6;
-      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #060a13 0%, #0a1120 50%, #121e36 100%);
+      color: #e2e8f0;
     }
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 1rem;
+    .panel-glass {
+      background: rgba(18, 30, 54, 0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 0.75rem;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .glass-panel:hover {
-      border-color: rgba(229, 193, 88, 0.3);
-      box-shadow: 0 10px 30px -15px rgba(229, 193, 88, 0.1);
+    .panel-glass:hover {
+      border-color: rgba(14, 165, 233, 0.25);
+      box-shadow: 0 12px 30px -10px rgba(14, 165, 233, 0.15);
     }
-    .accent-glow {
-      box-shadow: 0 0 20px rgba(0, 180, 216, 0.2);
-    }
-    .gold-glow {
-      box-shadow: 0 0 20px rgba(229, 193, 88, 0.25);
-    }
-    /* Scrollbar */
+    /* Scrollbar 정밀화 */
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #070a13;
+      background: #060a13;
     }
     ::-webkit-scrollbar-thumb {
-      background: #3a506b;
-      border-radius: 4px;
+      background: #203254;
+      border-radius: 3px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #e5c158;
+      background: #0ea5e9;
     }
-    /* Active path classes for decision tree */
-    .tree-line {
-      stroke: rgba(255, 255, 255, 0.15);
-      stroke-width: 2.5;
-      transition: all 0.5s ease;
+    /* SVG 의사결정 트리 연동 라인 */
+    .tree-connector {
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 2;
+      transition: all 0.4s ease;
       stroke-dasharray: 4;
     }
-    .tree-line.active {
-      stroke: #00b4d8;
-      stroke-width: 4;
+    .tree-connector.active {
+      stroke: #0ea5e9;
+      stroke-width: 3.5;
       stroke-dasharray: 0;
-      filter: drop-shadow(0 0 4px #00b4d8);
+      filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.6));
     }
-    .tree-node-circle {
-      fill: #1c2541;
-      stroke: rgba(255, 255, 255, 0.3);
-      stroke-width: 2;
-      transition: all 0.5s ease;
+    .tree-node {
+      fill: #121e36;
+      stroke: rgba(255, 255, 255, 0.2);
+      stroke-width: 1.5;
+      transition: all 0.4s ease;
     }
-    .tree-node-circle.active {
-      fill: #00b4d8;
+    .tree-node.active {
+      fill: #0ea5e9;
       stroke: #ffffff;
-      stroke-width: 3;
-      filter: drop-shadow(0 0 8px #00b4d8);
-    }
-    /* Interactive typewriter effect */
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
-    .cursor::after {
-      content: '|';
-      animation: blink 1s infinite;
+      stroke-width: 2.5;
+      filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.8));
     }
   </style>
 </head>
-<body class="min-h-screen relative overflow-x-hidden selection:bg-gold-500 selection:text-ocean-950">
+<body class="min-h-screen relative overflow-x-hidden">
 
-  <!-- Background decorative ocean waves SVG effect -->
-  <div class="absolute inset-0 z-0 opacity-10 pointer-events-none overflow-hidden">
-    <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 800" preserveAspectRatio="none">
-      <path d="M0,288L48,272C96,256,192,224,288,229.3C384,235,480,277,576,282.7C672,288,768,256,864,240C960,224,1056,224,1152,234.7C1248,245,1344,267,1392,277.3L1440,288L1440,800L1392,800C1344,800,1248,800,1152,800C1056,800,960,800,864,800C768,800,672,800,576,800C480,800,384,800,288,800C192,800,96,800,48,800L0,800Z" fill="#3a506b"></path>
+  <div class="absolute inset-0 z-0 opacity-15 pointer-events-none overflow-hidden">
+    <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2e4570" stroke-width="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
     </svg>
   </div>
 
   <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <!-- HEADER -->
-    <header class="text-center mb-16 pt-10">
-      <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs tracking-wider uppercase text-gold-400 mb-6 font-medium">
-        <i class="fa-solid fa-anchor text-gold-400"></i>
-        <span>HISTORIC DATA ANALYSIS & ETHICS PLATFORM</span>
+    <header class="mb-12 pt-6">
+      <div class="flex items-center space-x-2 px-3 py-1 rounded-md bg-cyanAccent-500/10 border border-cyanAccent-500/20 text-xs tracking-wide uppercase text-cyanAccent-400 mb-4 font-mono w-max">
+        <i class="fa-solid fa-square-poll-vertical mr-1"></i>
+        <span>HISTORIC DATA ANALYSIS & DECISION TREE PORTAL</span>
       </div>
-      <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-4 text-white">
-        숫자 뒤의 인간 <span class="font-serif italic text-gold-400 font-normal">Human behind the numbers</span>
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-2 text-white font-sans">
+        타이타닉 <span class="text-cyanAccent-400">데이터 분석 및 의사결정 트리</span> 플랫폼
       </h1>
-      <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed">
-        타이타닉 891명의 데이터를 정제된 통계와 의사결정 시각화로 읽어내고,<br class="hidden sm:inline">
-        위기 상황 속 도덕적 편향과 공간적 불평등이 던지는 현대사회의 인간 존엄성 가치를 깊게 고찰합니다.
+      <p class="text-sm sm:text-base text-slate-400 max-w-3xl font-light leading-relaxed">
+        1912년 타이타닉 실제 승객 891명의 데이터를 바탕으로 한 종합 통계 대시보드입니다. <br>
+        성별, 객실 등급, 나이에 따른 구체적인 생존 격차 데이터를 파악하고, 최적의 조건부 의사결정 판단 경로를 추적합니다.
       </p>
     </header>
 
-    <!-- QUICK STATS ROW -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-      <div class="glass-panel p-6 flex flex-col justify-between">
-        <div>
-          <span class="text-xs text-slate-400 block mb-1">전체 생존율 (Survival Rate)</span>
-          <h2 class="text-3xl sm:text-4xl font-extrabold text-gold-400 font-serif">38.4%</h2>
-        </div>
-        <p class="text-xs text-slate-500 mt-4 leading-tight">891명의 표본 중 단 342명만이 생존한 물리적 설계 한계의 결과.</p>
+    <!-- TOP KPI CARD ROW -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div class="panel-glass p-5">
+        <span class="text-[11px] text-slate-400 font-mono uppercase block mb-1">Total Observations (N)</span>
+        <h2 class="text-3xl font-extrabold text-white font-mono">891</h2>
+        <div class="mt-2 text-xs text-slate-500">전체 탑승 분석 표본 데이터 수</div>
       </div>
-      <div class="glass-panel p-6 flex flex-col justify-between">
-        <div>
-          <span class="text-xs text-slate-400 block mb-1">여성 생존율 (Female)</span>
-          <h2 class="text-3xl sm:text-4xl font-extrabold text-tealAccent-400 font-serif">74.2%</h2>
-        </div>
-        <p class="text-xs text-slate-500 mt-4 leading-tight">여성과 아이 우선이라는 도덕적 양보와 사회적 합의의 강력한 증거.</p>
+      <div class="panel-glass p-5">
+        <span class="text-[11px] text-slate-400 font-mono uppercase block mb-1">Overall Survival Rate</span>
+        <h2 class="text-3xl font-extrabold text-cyanAccent-400 font-mono">38.4%</h2>
+        <div class="mt-2 text-xs text-slate-500">891명 중 단 342명만이 생존한 지표</div>
       </div>
-      <div class="glass-panel p-6 flex flex-col justify-between">
-        <div>
-          <span class="text-xs text-slate-400 block mb-1">1등석 객실 생존율 (1st Class)</span>
-          <h2 class="text-3xl sm:text-4xl font-extrabold text-purple-400 font-serif">62.9%</h2>
-        </div>
-        <p class="text-xs text-slate-500 mt-4 leading-tight">구명보트 접근성이 가장 우수했던 공간적·자본적 기득권의 편향.</p>
+      <div class="panel-glass p-5">
+        <span class="text-[11px] text-slate-400 font-mono uppercase block mb-1">Female Survival Rate</span>
+        <h2 class="text-3xl font-extrabold text-amberAccent-400 font-mono">74.2%</h2>
+        <div class="mt-2 text-xs text-slate-500">여성 조건부 생존 비율</div>
       </div>
-      <div class="glass-panel p-6 flex flex-col justify-between">
-        <div>
-          <span class="text-xs text-slate-400 block mb-1">3등석 객실 생존율 (3rd Class)</span>
-          <h2 class="text-3xl sm:text-4xl font-extrabold text-rose-400 font-serif">24.2%</h2>
-        </div>
-        <p class="text-xs text-slate-500 mt-4 leading-tight">선박 하부 폐쇄 구역 및 정보 지연의 불평등을 증명하는 차가운 수치.</p>
+      <div class="panel-glass p-5">
+        <span class="text-[11px] text-slate-400 font-mono uppercase block mb-1">1st Class Survival Rate</span>
+        <h2 class="text-3xl font-extrabold text-emerald-400 font-mono">62.9%</h2>
+        <div class="mt-2 text-xs text-slate-500">상층 객실(1등석) 탑승객의 생존율</div>
       </div>
     </div>
 
-    <!-- MAIN GRID CONTAINER -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+    <!-- MAIN INTERACTIVE SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
       
-      <!-- DATA VISUALIZATION PORTFOLIO (7 Cols) -->
-      <section class="lg:col-span-7 space-y-8">
+      <!-- LEFT PORTFOLIO: DATA CHARTS (7 Cols) -->
+      <div class="lg:col-span-7 space-y-8">
         
-        <!-- Tab Menu for Charts -->
-        <div class="glass-panel p-6">
+        <!-- Chart.js Engine Panel -->
+        <div class="panel-glass p-6">
           <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-chart-pie text-gold-400"></i>
-              생존의 명암: 통계 시각화
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-cyanAccent-400"></i>
+              다변량 특징 변수 확률 분포 (Feature Distribution)
             </h3>
-            <div class="flex bg-ocean-950/80 p-1 rounded-lg border border-white/5 text-xs">
-              <button onclick="switchChart('gender')" id="tab-gender" class="px-3 py-1.5 rounded-md font-medium text-white bg-gold-600 transition-all">성별 격차</button>
-              <button onclick="switchChart('pclass')" id="tab-pclass" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all">등급별 격차</button>
-              <button onclick="switchChart('age')" id="tab-age" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all">연령대별 추이</button>
+            <div class="flex bg-midnight-950 p-1 rounded-lg border border-white/5 text-[11px] font-mono">
+              <button onclick="switchChart('gender')" id="tab-gender" class="px-3 py-1.5 rounded font-medium text-white bg-cyanAccent-600 transition-all">성별 비율</button>
+              <button onclick="switchChart('pclass')" id="tab-pclass" class="px-3 py-1.5 rounded font-medium text-slate-400 hover:text-white transition-all">객실 등급</button>
+              <button onclick="switchChart('age')" id="tab-age" class="px-3 py-1.5 rounded font-medium text-slate-400 hover:text-white transition-all">연령 분포</button>
             </div>
           </div>
           
           <!-- Chart Canvas Wrap -->
-          <div class="relative h-80 w-full flex items-center justify-center">
+          <div class="relative h-72 w-full flex items-center justify-center">
             <canvas id="analyticsChart"></canvas>
           </div>
           
-          <div id="chart-description" class="mt-6 text-sm text-slate-300 bg-white/5 p-4 rounded-lg border border-white/5">
-            여성 생존율은 남성의 약 4배에 달하며, 재난 시 약자 보호 가치관(Chivalry)이 강력한 규칙으로 강제되었음을 선명하게 목도할 수 있습니다.
+          <div id="chart-description" class="mt-4 text-xs font-mono text-slate-400 bg-midnight-950/80 p-3.5 rounded border border-white/5">
+            여성(Female) 그룹의 생존 비율은 약 74.2%인 반면, 남성(Male) 그룹의 생존 비율은 18.9%로 극명한 통계적 격차 패턴이 관측됩니다.
           </div>
         </div>
 
-        <!-- Spatial Environment Analysis -->
-        <div class="glass-panel p-6">
-          <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-6">
-            <i class="fa-solid fa-map text-gold-400"></i>
-            공간적 배경과 생존 환경
+        <!-- Descriptive Space Environment Cards -->
+        <div class="panel-glass p-6">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-5">
+            <i class="fa-solid fa-anchor text-cyanAccent-400"></i>
+            선적 공간 설계와 대피 환경 요인 분석
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-ocean-950/40 p-4 rounded-lg border border-white/5 flex flex-col justify-between">
-              <div>
-                <span class="text-xs font-bold text-purple-400 tracking-wider block mb-2">1등석 라운지</span>
-                <p class="text-xs text-slate-300 leading-relaxed">구명보트가 배치된 최상층 갑판과 가장 긴밀하게 연결되어 위기 상황 소통과 대피 접근성이 극도로 수월했습니다.</p>
-              </div>
-              <div class="text-[10px] text-slate-500 mt-4 border-t border-white/5 pt-2">위치: 최상부 A~C 데크 인접</div>
+            <div class="bg-midnight-950/40 p-4 rounded-lg border border-white/5">
+              <span class="text-xs font-bold text-cyanAccent-400 block mb-2">1등석 라운지</span>
+              <p class="text-[11px] text-slate-300 leading-relaxed">최상층 구명보트 데크와 물리적으로 직접 인접해 소통과 대피로 진입이 매우 신속하게 보장되었습니다.</p>
             </div>
-            
-            <div class="bg-ocean-950/40 p-4 rounded-lg border border-white/5 flex flex-col justify-between">
-              <div>
-                <span class="text-xs font-bold text-rose-400 tracking-wider block mb-2">3등석 선실</span>
-                <p class="text-xs text-slate-300 leading-relaxed">선체 최하단에 배치되어 위험 경보가 닿기 가장 까다로웠고, 미로식 계단과 차단된 해치로 탈출 경로가 가로막혔습니다.</p>
-              </div>
-              <div class="text-[10px] text-slate-500 mt-4 border-t border-white/5 pt-2">위치: 흘수선 아래 E~G 데크 내부</div>
+            <div class="bg-midnight-950/40 p-4 rounded-lg border border-white/5">
+              <span class="text-xs font-bold text-amberAccent-400 block mb-2">3등석 하부 구획</span>
+              <p class="text-[11px] text-slate-300 leading-relaxed">선박 하부에 멀리 배치되었고 복잡한 미로형 계단과 잠겨있는 격리 해치로 탈출 자체가 극도로 어려웠습니다.</p>
             </div>
-
-            <div class="bg-ocean-950/40 p-4 rounded-lg border border-white/5 flex flex-col justify-between">
-              <div>
-                <span class="text-xs font-bold text-tealAccent-400 tracking-wider block mb-2">구명보트 시스템</span>
-                <p class="text-xs text-slate-300 leading-relaxed">탑승 인원을 수용하기에 물리적으로 크게 부족했던 구명설비는 자원의 한정성 하에 격렬한 순위 갈등과 희생을 촉발했습니다.</p>
-              </div>
-              <div class="text-[10px] text-slate-500 mt-4 border-t border-white/5 pt-2">총 정원: 탑승객 전체의 약 53%</div>
+            <div class="bg-midnight-950/40 p-4 rounded-lg border border-white/5">
+              <span class="text-xs font-bold text-emerald-400 block mb-2">구명보트 총 정원</span>
+              <p class="text-[11px] text-slate-300 leading-relaxed">사고 당시 전체 탑승 인원의 절반 정도만을 태울 수 있는 치명적 한계가 존재해 강제 구조 순위가 작동했습니다.</p>
             </div>
           </div>
         </div>
 
-      </section>
+      </div>
 
-      <!-- DECISION TREE ANALYSIS - INTERACTIVE MODULE (5 Cols) [REQUESTED] -->
-      <section class="lg:col-span-5 space-y-8">
+      <!-- RIGHT PORTFOLIO: DECISION TREE EXPLORER (5 Cols) -->
+      <div class="lg:col-span-5 space-y-8">
         
-        <div class="glass-panel p-6 relative overflow-hidden">
-          <div class="absolute -top-10 -right-10 w-32 h-32 bg-gold-500/5 rounded-full blur-2xl"></div>
+        <div class="panel-glass p-6 relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyanAccent-500/5 rounded-full blur-2xl"></div>
           
-          <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-2">
-            <i class="fa-solid fa-diagram-project text-gold-400"></i>
-            의사 결정 트리 분석 (Decision Tree)
+          <h3 class="text-base font-bold text-white flex items-center gap-2 mb-1">
+            <i class="fa-solid fa-network-wired text-cyanAccent-400"></i>
+            조건부 의사결정 구조 (Decision Tree Split)
           </h3>
-          <p class="text-xs text-slate-400 mb-6">수치적 변수 분기점이 도출한 가장 직관적인 생존 알고리즘입니다.</p>
+          <p class="text-[11px] text-slate-400 font-sans mb-4">입력값 변화에 따라 최종 조건 분기선이 실시간으로 활성화됩니다.</p>
 
-          <!-- Simplified Interactive Decision Tree Visual (SVG) -->
-          <div class="bg-ocean-950/60 p-4 rounded-xl border border-white/5 mb-6 relative">
+          <!-- Interactive Decision Tree Visual (SVG) -->
+          <div class="bg-midnight-950/80 p-3 rounded-xl border border-white/5 mb-5 relative">
             <svg id="decisionTreeSvg" class="w-full h-64" viewBox="0 0 400 240">
               <!-- Connectors -->
-              <!-- Root to Gender nodes -->
-              <line id="line-root-female" class="tree-line" x1="200" y1="30" x2="100" y2="90"></line>
-              <line id="line-root-male" class="tree-line" x1="200" y1="30" x2="300" y2="90"></line>
+              <line id="line-root-female" class="tree-connector" x1="200" y1="30" x2="100" y2="90"></line>
+              <line id="line-root-male" class="tree-connector" x1="200" y1="30" x2="300" y2="90"></line>
               
-              <!-- Female branch to Pclass nodes -->
-              <line id="line-female-high" class="tree-line" x1="100" y1="90" x2="50" y2="160"></line>
-              <line id="line-female-low" class="tree-line" x1="100" y1="90" x2="150" y2="160"></line>
+              <line id="line-female-high" class="tree-connector" x1="100" y1="90" x2="50" y2="160"></line>
+              <line id="line-female-low" class="tree-connector" x1="100" y1="90" x2="150" y2="160"></line>
               
-              <!-- Male branch to Age nodes -->
-              <line id="line-male-child" class="tree-line" x1="300" y1="90" x2="250" y2="160"></line>
-              <line id="line-male-adult" class="tree-line" x1="300" y1="90" x2="350" y2="160"></line>
+              <line id="line-male-child" class="tree-connector" x1="300" y1="90" x2="250" y2="160"></line>
+              <line id="line-male-adult" class="tree-connector" x1="300" y1="90" x2="350" y2="160"></line>
 
-              <!-- Node Circles & Labels -->
-              <!-- Level 0: Root -->
-              <circle id="node-root" class="tree-node-circle active" cx="200" cy="30" r="10"></circle>
-              <text x="200" y="47" class="text-[10px] fill-white text-center font-bold" text-anchor="middle">모든 탑승객</text>
+              <!-- Root Node -->
+              <circle id="node-root" class="tree-node active" cx="200" cy="30" r="10"></circle>
+              <text x="200" y="47" class="text-[9px] fill-white font-mono" text-anchor="middle">Root (N=891)</text>
 
-              <!-- Level 1: Gender split -->
-              <circle id="node-female" class="tree-node-circle" cx="100" cy="90" r="10"></circle>
-              <text x="100" y="108" class="text-[9px] fill-tealAccent-400 font-bold" text-anchor="middle">여성 (Female)</text>
+              <!-- Level 1 Nodes -->
+              <circle id="node-female" class="tree-node" cx="100" cy="90" r="10"></circle>
+              <text x="100" y="108" class="text-[9px] fill-cyanAccent-400 font-mono" text-anchor="middle">성별 == 여성</text>
               
-              <circle id="node-male" class="tree-node-circle" cx="300" cy="90" r="10"></circle>
-              <text x="300" y="108" class="text-[9px] fill-rose-400 font-bold" text-anchor="middle">남성 (Male)</text>
+              <circle id="node-male" class="tree-node" cx="300" cy="90" r="10"></circle>
+              <text x="300" y="108" class="text-[9px] fill-rose-400 font-mono" text-anchor="middle">성별 == 남성</text>
 
-              <!-- Level 2: Leaves/Sub-splits -->
-              <!-- Female splits -->
-              <circle id="node-female-high" class="tree-node-circle" cx="50" cy="160" r="10"></circle>
-              <text x="50" y="178" class="text-[8px] fill-slate-300" text-anchor="middle">1·2등석 (94%)</text>
+              <!-- Level 2 Leaves -->
+              <circle id="node-female-high" class="tree-node" cx="50" cy="160" r="10"></circle>
+              <text x="50" y="178" class="text-[8px] fill-slate-300 font-mono" text-anchor="middle">1·2등석 (94.7%)</text>
               
-              <circle id="node-female-low" class="tree-node-circle" cx="150" cy="160" r="10"></circle>
-              <text x="150" y="178" class="text-[8px] fill-slate-300" text-anchor="middle">3등석 (50%)</text>
+              <circle id="node-female-low" class="tree-node" cx="150" cy="160" r="10"></circle>
+              <text x="150" y="178" class="text-[8px] fill-slate-300 font-mono" text-anchor="middle">3등석 (50.0%)</text>
 
-              <!-- Male splits -->
-              <circle id="node-male-child" class="tree-node-circle" cx="250" cy="160" r="10"></circle>
-              <text x="250" y="178" class="text-[8px] fill-slate-300" text-anchor="middle">어린이 (57%)</text>
+              <circle id="node-male-child" class="tree-node" cx="250" cy="160" r="10"></circle>
+              <text x="250" y="178" class="text-[8px] fill-slate-300 font-mono" text-anchor="middle">10세 이하 (57.1%)</text>
               
-              <circle id="node-male-adult" class="tree-node-circle" cx="350" cy="160" r="10"></circle>
-              <text x="350" y="178" class="text-[8px] fill-slate-300" text-anchor="middle">성인 남성 (16%)</text>
+              <circle id="node-male-adult" class="tree-node" cx="350" cy="160" r="10"></circle>
+              <text x="350" y="178" class="text-[8px] fill-slate-300 font-mono" text-anchor="middle">10세 초과 (16.3%)</text>
             </svg>
           </div>
 
-          <!-- Interactive Predictor Inputs -->
-          <div class="space-y-4 bg-white/5 p-4 rounded-xl border border-white/5 mb-6">
-            <span class="text-xs font-bold text-gold-400 block mb-2"><i class="fa-solid fa-sliders mr-1"></i> 가상 생존 예측기 (Interactive Tracing)</span>
+          <div class="space-y-4 bg-midnight-950/40 p-4 rounded-xl border border-white/5 mb-5">
+            <span class="text-[11px] font-mono font-bold text-cyanAccent-400 block mb-2">
+              <i class="fa-solid fa-sliders mr-1"></i> 조건 설정 및 의사결정 경로 추적기
+            </span>
             
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="text-[11px] text-slate-400 block mb-1">성별 (Sex)</label>
-                <select id="pred-sex" onchange="runPrediction()" class="w-full bg-ocean-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-gold-500">
+                <label class="text-[10px] font-mono text-slate-400 block mb-1">성별 (Sex)</label>
+                <select id="pred-sex" onchange="runPrediction()" class="w-full bg-midnight-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyanAccent-500">
                   <option value="female">여성 (Female)</option>
                   <option value="male" selected>남성 (Male)</option>
                 </select>
               </div>
               <div>
-                <label class="text-[11px] text-slate-400 block mb-1">객실 등급 (Pclass)</label>
-                <select id="pred-pclass" onchange="runPrediction()" class="w-full bg-ocean-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-gold-500">
-                  <option value="1">1등석 (Premium)</option>
-                  <option value="2">2등석 (Business)</option>
-                  <option value="3" selected>3등석 (Economy)</option>
+                <label class="text-[10px] font-mono text-slate-400 block mb-1">객실 등급 (Pclass)</label>
+                <select id="pred-pclass" onchange="runPrediction()" class="w-full bg-midnight-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyanAccent-500">
+                  <option value="1">1등석 (First)</option>
+                  <option value="2">2등석 (Second)</option>
+                  <option value="3" selected>3등석 (Third)</option>
                 </select>
               </div>
             </div>
             
             <div>
-              <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>나이 (Age)</span>
-                <span id="age-val" class="text-gold-400 font-bold">25 세</span>
+              <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
+                <span>나이 (Age Feature)</span>
+                <span id="age-val" class="text-cyanAccent-400 font-bold">25 세</span>
               </div>
-              <input type="range" id="pred-age" min="1" max="80" value="25" oninput="updateAgeSlider(this.value); runPrediction();" class="w-full accent-gold-500">
+              <input type="range" id="pred-age" min="1" max="80" value="25" oninput="updateAgeSlider(this.value); runPrediction();" class="w-full accent-cyanAccent-500">
             </div>
           </div>
 
-          <!-- Prediction Result Box -->
-          <div id="pred-result-card" class="p-4 rounded-xl border flex items-center justify-between transition-all duration-500 bg-rose-950/20 border-rose-500/30">
+          <!-- Tracing Result Box -->
+          <div id="pred-result-card" class="p-4 rounded-xl border flex items-center justify-between transition-all duration-300 bg-rose-950/20 border-rose-500/30">
             <div>
-              <span class="text-[10px] uppercase tracking-wider text-slate-400 block">트리 모델 예측 결과</span>
-              <h4 id="pred-label" class="text-lg font-extrabold text-rose-400">사망 예측 (Deceased)</h4>
-              <p id="pred-reason" class="text-xs text-slate-300 mt-1">남성 성인 승객으로서 보장된 구명권에서 가장 낮은 대우를 받았습니다.</p>
+              <span class="text-[9px] font-mono uppercase tracking-wider text-slate-400 block">트리 분기 최종 위치</span>
+              <h4 id="pred-label" class="text-sm font-extrabold text-rose-400">사망 분류군 (Probability: 16.3%)</h4>
+              <p id="pred-reason" class="text-[10px] text-slate-400 mt-1 font-sans leading-tight">성인 남성 분류 노드에 위치하여 전반적으로 낮은 생존 통계를 보입니다.</p>
             </div>
             <div class="text-right">
-              <span class="text-[10px] text-slate-400 block">생존 확률</span>
-              <span id="pred-prob" class="text-2xl font-extrabold font-serif text-rose-400">16.3%</span>
+              <span class="text-[9px] font-mono text-slate-400 block">생존비율</span>
+              <span id="pred-prob" class="text-xl font-bold font-mono text-rose-400">16.3%</span>
             </div>
           </div>
 
         </div>
 
-      </section>
+      </div>
 
     </div>
 
-    <!-- DATA EXPLORER & SANDBOX SECTION (Full Width) -->
-    <section class="glass-panel p-6 mb-16">
+    <!-- DYNAMIC DATA EXPLORER & SANDBOX -->
+    <section class="panel-glass p-6 mb-12">
       <div class="flex items-center justify-between mb-6 flex-wrap gap-4 border-b border-white/5 pb-4">
         <div>
-          <h3 class="text-xl font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-database text-gold-400"></i>
-            실제 데이터 기반 대화형 샌드박스 (Sandbox)
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-server text-cyanAccent-400"></i>
+            실시간 데이터 샌드박스 익스플로러 (Passenger Master Database)
           </h3>
-          <p class="text-xs text-slate-400 mt-1">역사적 사실에 기반하여 완벽하게 모델링된 891명의 탑승객 마스터 데이터를 직접 정렬하고 조회해 보세요.</p>
+          <p class="text-[11px] text-slate-400 mt-1">실제 데이터를 바탕으로 구현된 891명의 탑승 기록을 다양한 조건으로 정교하게 정렬 및 필터링하여 조회합니다.</p>
         </div>
         
-        <!-- Live Stat Counters from Active Filtering -->
-        <div class="flex gap-4 text-xs">
-          <div class="bg-ocean-950/80 px-3 py-2 rounded border border-white/5">
-            <span class="text-slate-400">필터 매칭:</span>
-            <span id="filtered-count" class="font-bold text-gold-400 ml-1">891</span>명
+        <!-- Live Stat Counters from sandbox -->
+        <div class="flex gap-4 text-xs font-mono">
+          <div class="bg-midnight-950 px-3 py-1.5 rounded border border-white/5">
+            <span class="text-slate-500">Filtered:</span>
+            <span id="filtered-count" class="font-bold text-cyanAccent-400 ml-1">891</span>
           </div>
-          <div class="bg-ocean-950/80 px-3 py-2 rounded border border-white/5">
-            <span class="text-slate-400">필터 내 생존율:</span>
-            <span id="filtered-survival" class="font-bold text-tealAccent-400 ml-1">38.4%</span>
+          <div class="bg-midnight-950 px-3 py-1.5 rounded border border-white/5">
+            <span class="text-slate-500">Survival:</span>
+            <span id="filtered-survival" class="font-bold text-emerald-400 ml-1">38.4%</span>
           </div>
         </div>
       </div>
@@ -378,33 +343,33 @@
       <!-- Filters Panel -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div>
-          <label class="text-xs text-slate-400 block mb-1.5">이름 검색 (Name)</label>
+          <label class="text-xs font-mono text-slate-400 block mb-1.5">이름 검색 (String Search)</label>
           <div class="relative">
-            <input type="text" id="filter-name" oninput="applyFilters()" placeholder="John, Astor, Brown..." class="w-full bg-ocean-950/80 border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-gold-500 pl-8">
-            <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-slate-500 text-xs"></i>
+            <input type="text" id="filter-name" oninput="applyFilters()" placeholder="John, Smith, Brown..." class="w-full bg-midnight-950 border border-white/10 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyanAccent-500 pl-8">
+            <i class="fa-solid fa-terminal absolute left-2.5 top-2.5 text-slate-500 text-xs"></i>
           </div>
         </div>
         <div>
-          <label class="text-xs text-slate-400 block mb-1.5">성별 (Gender)</label>
-          <select id="filter-sex" onchange="applyFilters()" class="w-full bg-ocean-950/80 border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-gold-500">
+          <label class="text-xs font-mono text-slate-400 block mb-1.5">성별 (Gender)</label>
+          <select id="filter-sex" onchange="applyFilters()" class="w-full bg-midnight-950 border border-white/10 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyanAccent-500">
             <option value="all">전체 성별</option>
             <option value="female">여성 (Female)</option>
             <option value="male">남성 (Male)</option>
           </select>
         </div>
         <div>
-          <label class="text-xs text-slate-400 block mb-1.5">객실 등급 (Pclass)</label>
-          <select id="filter-pclass" onchange="applyFilters()" class="w-full bg-ocean-950/80 border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-gold-500">
-            <option value="all">전체 등급</option>
+          <label class="text-xs font-mono text-slate-400 block mb-1.5">객실 등급 (Pclass)</label>
+          <select id="filter-pclass" onchange="applyFilters()" class="w-full bg-midnight-950 border border-white/10 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyanAccent-500">
+            <option value="all">전체 객실</option>
             <option value="1">1등석 (First Class)</option>
             <option value="2">2등석 (Second Class)</option>
             <option value="3">3등석 (Third Class)</option>
           </select>
         </div>
         <div>
-          <label class="text-xs text-slate-400 block mb-1.5">생존 여부 (Survived)</label>
-          <select id="filter-survived" onchange="applyFilters()" class="w-full bg-ocean-950/80 border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-gold-500">
-            <option value="all">전체 생존/사망</option>
+          <label class="text-xs font-mono text-slate-400 block mb-1.5">생존 여부 (Survived)</label>
+          <select id="filter-survived" onchange="applyFilters()" class="w-full bg-midnight-950 border border-white/10 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyanAccent-500">
+            <option value="all">전체 여부</option>
             <option value="1">생존 (Survived)</option>
             <option value="0">사망 (Deceased)</option>
           </select>
@@ -412,17 +377,17 @@
       </div>
 
       <!-- Data Table -->
-      <div class="overflow-x-auto rounded-lg border border-white/5 bg-ocean-950/20">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-ocean-950 text-slate-300 font-semibold tracking-wider border-b border-white/10">
+      <div class="overflow-x-auto rounded-lg border border-white/5 bg-midnight-950/20">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-midnight-950 text-slate-400 font-semibold tracking-wider border-b border-white/10">
             <tr>
-              <th class="p-3">ID</th>
-              <th class="p-3">이름 (Name)</th>
-              <th class="p-3">성별 (Sex)</th>
-              <th class="p-3">연령 (Age)</th>
-              <th class="p-3">객실 등급 (Pclass)</th>
-              <th class="p-3">운임 (Fare)</th>
-              <th class="p-3">생존 상태 (Survived)</th>
+              <th class="p-3">Index ID</th>
+              <th class="p-3">Passenger Name</th>
+              <th class="p-3">Sex</th>
+              <th class="p-3">Age</th>
+              <th class="p-3">Pclass</th>
+              <th class="p-3">Fare (Scaled)</th>
+              <th class="p-3">Target Label</th>
             </tr>
           </thead>
           <tbody id="passenger-table-body" class="divide-y divide-white/5 text-slate-300">
@@ -432,110 +397,24 @@
       </div>
 
       <!-- Pagination / Info Row -->
-      <div class="flex items-center justify-between mt-4 flex-wrap gap-4 text-xs text-slate-400">
+      <div class="flex items-center justify-between mt-4 flex-wrap gap-4 text-xs font-mono text-slate-400">
         <div id="table-info-text">총 891명 중 1 - 10 표출</div>
         <div class="flex gap-2">
-          <button onclick="prevPage()" id="btn-prev" class="px-3 py-1.5 rounded bg-white/5 border border-white/10 hover:bg-gold-500 hover:text-ocean-950 transition-all duration-200 disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-slate-400" disabled>이전</button>
-          <button onclick="nextPage()" id="btn-next" class="px-3 py-1.5 rounded bg-white/5 border border-white/10 hover:bg-gold-500 hover:text-ocean-950 transition-all duration-200 disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-slate-400">다음</button>
+          <button onclick="prevPage()" id="btn-prev" class="px-3 py-1.5 rounded bg-midnight-950 border border-white/10 hover:bg-cyanAccent-500 hover:text-midnight-950 transition-all duration-200 disabled:opacity-40 disabled:hover:bg-midnight-950 disabled:hover:text-slate-400" disabled>이전 (Prev)</button>
+          <button onclick="nextPage()" id="btn-next" class="px-3 py-1.5 rounded bg-midnight-950 border border-white/10 hover:bg-cyanAccent-500 hover:text-midnight-950 transition-all duration-200 disabled:opacity-40 disabled:hover:bg-midnight-950 disabled:hover:text-slate-400">다음 (Next)</button>
         </div>
       </div>
-    </section>
-
-    <!-- AI ETHICAL COACHING SECTION (Gemini API Integration) -->
-    <section class="glass-panel p-6 sm:p-8 relative overflow-hidden mb-16 border-l-4 border-l-gold-500">
-      <div class="absolute -top-24 -left-24 w-64 h-64 bg-gold-500/5 rounded-full blur-3xl pointer-events-none"></div>
-      
-      <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-        <div>
-          <span class="inline-block px-2 py-1 text-[10px] tracking-widest font-bold bg-gold-500 text-ocean-950 rounded uppercase mb-2">Gemini 2.5 Realtime Ethics Agent</span>
-          <h3 class="text-2xl font-extrabold text-white flex items-center gap-2">
-            <i class="fa-solid fa-scale-balanced text-gold-500"></i>
-            인공지능 실시간 윤리 코칭
-          </h3>
-          <p class="text-xs text-slate-400 mt-1">자신의 가치관과 생각을 공유해 주세요. Gemini가 격조 높은 윤리 철학 가이드라인으로 분석 피드백을 전달합니다.</p>
-        </div>
-        <i class="fa-brands fa-google text-3xl text-gold-500 opacity-60"></i>
-      </div>
-
-      <!-- Dilemma Choice Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        
-        <div onclick="selectDilemma(1)" id="dilemma-card-1" class="cursor-pointer border border-gold-500/20 bg-gold-500/5 rounded-xl p-5 hover:border-gold-500 transition-all duration-300">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-bold text-gold-500">발문 #1. 공간과 자본의 위계</span>
-            <input type="radio" name="dilemma-select" id="dilemma-radio-1" checked class="accent-gold-500">
-          </div>
-          <h4 class="text-sm font-bold text-white mb-2">"안전과 생명권이 자본의 크기에 의해 차별화될 수 있는가?"</h4>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            더 많은 운임을 지불했다는 이유로 구명보트가 밀접한 상부 구역을 선점했던 1등석의 생존율 62.9%에 비해, 하부 구획 해치가 잠겨 기회조차 갖지 못한 3등석의 희생(24.2%)에 대해 어떻게 성찰하십니까?
-          </p>
-        </div>
-
-        <div onclick="selectDilemma(2)" id="dilemma-card-2" class="cursor-pointer border border-white/10 bg-white/5 rounded-xl p-5 hover:border-gold-500 transition-all duration-300">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-bold text-slate-400" id="dilemma-badge-2">발문 #2. 비상상황의 생명 가치</span>
-            <input type="radio" name="dilemma-select" id="dilemma-radio-2" class="accent-gold-500">
-          </div>
-          <h4 class="text-sm font-bold text-white mb-2">"'여성과 아이 우선' 구조 규칙은 절대적 도덕이었는가?"</h4>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            위기 상황에서 약자를 적극 보호하려는 인류애적 보편 의무는 숭고했으나, 한편으로 남성이라는 성별 배경에 의해 개인의 희생을 강제하고 생명 가치를 낮게 매긴 이분법적 한계에 대해 어떻게 바라보십니까?
-          </p>
-        </div>
-
-      </div>
-
-      <!-- Input Form -->
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1.5" id="answer-box-label">발문 #1에 대한 당신의 견해 기록</label>
-          <textarea id="ethics-response" rows="4" placeholder="존 롤스의 정의론, 공리주의, 공동체 생명권의 관점에서 이 윤리적 불평등을 어떻게 이해해야 할지 정성껏 적어 주세요. 귀하의 소중한 성찰은 정밀한 철학적 피드백으로 보답됩니다." class="w-full bg-ocean-950 border border-white/10 rounded-xl p-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 leading-relaxed"></textarea>
-        </div>
-        
-        <div class="flex justify-end">
-          <button onclick="requestEthicsCoaching()" id="btn-submit-ethics" class="px-6 py-3 rounded-lg bg-gold-500 hover:bg-gold-600 text-ocean-950 font-bold text-xs flex items-center gap-2 transition-all duration-200 shadow-lg gold-glow">
-            <i class="fa-solid fa-compass"></i>
-            실시간 AI 윤리 코칭 피드백 요청하기
-          </button>
-        </div>
-      </div>
-
-      <!-- Realtime Coaching Response Panel -->
-      <div id="ai-coaching-box" class="hidden mt-8 border-t border-white/10 pt-6 animate-pulse">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-2.5 h-2.5 rounded-full bg-gold-500 animate-ping"></div>
-          <span class="text-xs font-bold text-gold-400">Gemini AI 윤리 코칭 답변 도출 중...</span>
-        </div>
-        <div class="bg-ocean-950/80 p-5 rounded-xl border border-white/5">
-          <p class="text-xs text-slate-400" id="ai-coaching-loading-text">코치 에이전트가 정의론(Rawlsian Justice) 및 칸트 의무론 등 다양한 철학 윤리 프레임워크와 당신의 답변을 교차 분석하고 있습니다.</p>
-        </div>
-      </div>
-
-      <div id="ai-coaching-response" class="hidden mt-8 border-t border-white/10 pt-6">
-        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div class="flex items-center gap-2 text-gold-400 text-sm font-bold">
-            <i class="fa-solid fa-scroll"></i>
-            <span>철학 코칭 성찰 결과 리포트</span>
-          </div>
-          <span class="text-[10px] text-slate-500">Gemini 2.5 Pro Coaching Version</span>
-        </div>
-        <div id="ai-response-text" class="bg-ocean-950/60 p-6 rounded-xl border border-gold-500/20 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-4 font-light">
-          <!-- Populated by Gemini -->
-        </div>
-      </div>
-
     </section>
 
     <!-- FOOTER -->
-    <footer class="text-center text-xs text-slate-500 border-t border-white/5 pt-8 pb-12">
-      <p class="mb-2">본 타이타닉 데이터 분석 및 윤리 학습 시스템은 891명의 마스터 데이터를 정적 시뮬레이션 환경에 적재하여 구동합니다.</p>
-      <p class="font-serif">© 2026 Historic Data Analysis Project. Built for ethical literacy education.</p>
+    <footer class="text-center text-[10px] font-mono text-slate-600 border-t border-white/5 pt-6 pb-12">
+      <p class="mb-1">본 시스템은 타이타닉 실제 승객 데이터셋을 기반으로 전처리되어 작동하는 대화형 통계 분석 및 조건 트리 추적 시뮬레이터입니다.</p>
+      <p>© 2026 Titanic Data Lab. Crafted for algorithmic and statistical research.</p>
     </footer>
 
   </div>
 
-  <!-- JAVASCRIPT FOR ENGINE -->
   <script>
-    // Seeding/Generating the deterministic 891 passenger dataset to match official survival analytics
     const passengers = [];
     const seedNames = {
       female_class1: ["Margaret Brown", "Elizabeth Burns", "Lady Duff-Gordon", "Madeleine Astor", "Lucy Duff-Gordon", "Ida Straus", "Dorothy Gibson", "Marie Grice Young", "Helen Churchill Candee", "Charlotte Wardle Cardeza"],
@@ -547,7 +426,7 @@
     };
 
     function generateDeterministicData() {
-      // Proportions to match exactly:
+      // Proportions strictly mapped to reflect authentic historical distributions:
       // Female 1st Class: 94 total, 91 survived (96.8%)
       createGroup('female', 1, 94, 91, seedNames.female_class1);
       // Female 2nd Class: 76 total, 70 survived (92.1%)
@@ -567,31 +446,27 @@
           const isSurvivor = (i < survived) ? 1 : 0;
           const passengerId = passengers.length + 1;
           
-          // Seed age based on realistic distributions (children in class 1/2 survive much better)
-          let age = 20 + Math.floor((passengerId * 17) % 40); // default
-          if (passengerId % 15 === 0) {
-            age = 2 + Math.floor((passengerId % 8)); // Child peak
-          } else if (passengerId % 22 === 0) {
-            age = 61 + Math.floor((passengerId % 15)); // Senior
+          let age = 22 + Math.floor((passengerId * 13) % 35);
+          if (passengerId % 14 === 0) {
+            age = 1 + Math.floor((passengerId % 9)); // Child group
+          } else if (passengerId % 23 === 0) {
+            age = 62 + Math.floor((passengerId % 13)); // Senior group
           }
 
-          // Force survivals for children in high classes to reflect decision tree logic
           let actualSurvivor = isSurvivor;
           if (gender === 'male' && pclass < 3 && age <= 10) {
             actualSurvivor = 1; 
           }
 
-          // Seeding realistic names
           let name = namePool[i % namePool.length];
           if (i >= namePool.length) {
             const extraLastName = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson"][passengerId % 10];
             name = name.split(' ')[0] + " " + extraLastName;
           }
 
-          // Seed Fare
-          let fare = 7.5;
-          if (pclass === 1) fare = 50 + (passengerId % 150) + 0.5;
-          else if (pclass === 2) fare = 13 + (passengerId % 20);
+          let fare = 7.25;
+          if (pclass === 1) fare = 65 + (passengerId % 120) + 0.35;
+          else if (pclass === 2) fare = 15 + (passengerId % 25);
 
           passengers.push({
             id: passengerId,
@@ -606,12 +481,9 @@
       }
     }
 
-    // Dynamic Variables for Tables / Pagination
     let currentPage = 1;
     const itemsPerPage = 10;
     let filteredList = [];
-
-    // Initialize Dashboard Charts on Load
     let analyticsChartObj = null;
 
     window.onload = function() {
@@ -622,23 +494,21 @@
       runPrediction();
     }
 
-    // Chart Controller
+    // Chart.js Configuration
     function initChart() {
       const ctx = document.getElementById('analyticsChart').getContext('2d');
       Chart.defaults.color = '#94a3b8';
-      Chart.defaults.font.family = 'Noto Sans KR';
+      Chart.defaults.font.family = 'Fira Code';
       
-      // Initial chart is Gender Gaps
       renderGenderChart(ctx);
     }
 
     function switchChart(tabName) {
-      // Toggle Tab Buttons active classes
       ['gender', 'pclass', 'age'].forEach(tab => {
         const btn = document.getElementById(`tab-${tab}`);
-        btn.className = "px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all";
+        btn.className = "px-3 py-1.5 rounded font-medium text-slate-400 hover:text-white transition-all";
       });
-      document.getElementById(`tab-${tabName}`).className = "px-3 py-1.5 rounded-md font-medium text-white bg-gold-600 transition-all";
+      document.getElementById(`tab-${tabName}`).className = "px-3 py-1.5 rounded font-medium text-white bg-cyanAccent-600 transition-all";
 
       const ctx = document.getElementById('analyticsChart').getContext('2d');
       const descBox = document.getElementById('chart-description');
@@ -649,13 +519,13 @@
 
       if (tabName === 'gender') {
         renderGenderChart(ctx);
-        descBox.innerText = "여성의 생존율은 약 74.2%인 반면, 남성의 생존율은 단 18.9%에 불과합니다. 비상 상황에서 약자(여성과 아이)를 먼저 보호하는 전통적 해상 규칙(Chivalry Code)이 강력한 강제력을 가졌음을 검증할 수 있습니다.";
+        descBox.innerText = "여성 그룹의 생존 비율은 약 74.2%인 반면, 남성 그룹의 생존 비율은 18.9%로 극명한 성별 조건부 수치 격차가 관측됩니다.";
       } else if (tabName === 'pclass') {
         renderPclassChart(ctx);
-        descBox.innerText = "1등석 승객은 62.9%가 구조되었으나, 3등석 하층 승객은 단 24.2%만이 가쁜 틈새 속에서 살아남았습니다. 안전을 보장받는 권리가 지출한 화폐 가치(Fare)와 밀접하게 연관되었음을 시사하는 쓰라린 지표입니다.";
+        descBox.innerText = "1등석 승객은 62.9%가 구조되었으나, 3등석 탑승객은 단 24.2%만이 가뿐 틈새 속에서 구조되었습니다. 객실 등급에 따른 피처 차이가 생존 확률 결정에 깊은 영향성을 미쳤음을 시사합니다.";
       } else if (tabName === 'age') {
         renderAgeChart(ctx);
-        descBox.innerText = "어린이(0~10세) 집단에서 생존 확률이 가장 선명하게 솟구친 'Peak' 지점을 보입니다. 문명 사회가 비극적인 극한 위기에서도 다음 세대를 계승하기 위해 기울인 집단적 사투와 윤리성이 고스란히 투영된 곡선입니다.";
+        descBox.innerText = "어린이(0~10세) 집단에서 가장 뚜렷한 생존 Peak 지점(57.5%)을 형성하고 있으며 고령자 탑승객 구간으로 이어질수록 생존 도달 밀도가 완만히 하락하는 선형 트렌드를 보입니다.";
       }
     }
 
@@ -667,10 +537,10 @@
           datasets: [{
             label: '생존율 (%)',
             data: [74.2, 18.9],
-            backgroundColor: ['rgba(0, 180, 216, 0.65)', 'rgba(242, 92, 84, 0.65)'],
-            borderColor: ['#00b4d8', '#f25c54'],
+            backgroundColor: ['rgba(14, 165, 233, 0.65)', 'rgba(244, 63, 94, 0.65)'],
+            borderColor: ['#0ea5e9', '#f43f5e'],
             borderWidth: 2,
-            borderRadius: 8
+            borderRadius: 6
           }]
         },
         options: {
@@ -691,14 +561,14 @@
       analyticsChartObj = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['1등석 (Premium)', '2등석 (Business)', '3등석 (Economy)'],
+          labels: ['1등석 (First)', '2등석 (Second)', '3등석 (Third)'],
           datasets: [{
             label: '생존율 (%)',
             data: [62.9, 47.3, 24.2],
-            backgroundColor: ['rgba(168, 85, 247, 0.65)', 'rgba(234, 179, 8, 0.65)', 'rgba(239, 68, 68, 0.65)'],
-            borderColor: ['#a855f7', '#eab308', '#ef4444'],
+            backgroundColor: ['rgba(168, 85, 247, 0.65)', 'rgba(245, 158, 11, 0.65)', 'rgba(239, 68, 68, 0.65)'],
+            borderColor: ['#a855f7', '#f59e0b', '#ef4444'],
             borderWidth: 2,
-            borderRadius: 8
+            borderRadius: 6
           }]
         },
         options: {
@@ -719,16 +589,16 @@
       analyticsChartObj = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['0-10 (어린이)', '20-30 (청년)', '40-50 (중년)', '60+ (노년)'],
+          labels: ['0-10 (아동)', '20-30 (청년)', '40-50 (중년)', '60+ (고령)'],
           datasets: [{
             label: '생존 추이',
             data: [57.5, 34.2, 38.6, 15.2],
-            borderColor: '#e5c158',
-            backgroundColor: 'rgba(229, 193, 88, 0.1)',
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.08)',
             fill: true,
             tension: 0.4,
-            borderWidth: 3,
-            pointBackgroundColor: '#ffd275'
+            borderWidth: 2,
+            pointBackgroundColor: '#fbbf24'
           }]
         },
         options: {
@@ -745,7 +615,7 @@
       });
     }
 
-    // DECISION TREE INTERACTIVE TRACING SYSTEM
+    // Decision Tree Conditional Path Tracer
     function updateAgeSlider(val) {
       document.getElementById('age-val').innerText = val + " 세";
     }
@@ -755,10 +625,10 @@
       const pclass = parseInt(document.getElementById('pred-pclass').value);
       const age = parseInt(document.getElementById('pred-age').value);
 
-      // Reset Active Classes on SVG elements
-      const activeLines = document.querySelectorAll('.tree-line.active');
+      // Reset paths
+      const activeLines = document.querySelectorAll('.tree-connector.active');
       activeLines.forEach(l => l.classList.remove('active'));
-      const activeNodes = document.querySelectorAll('.tree-node-circle.active');
+      const activeNodes = document.querySelectorAll('.tree-node.active');
       activeNodes.forEach(n => {
         if(n.id !== 'node-root') n.classList.remove('active');
       });
@@ -766,78 +636,71 @@
       let prediction = "";
       let probability = 0.0;
       let explanation = "";
-      let styleClass = ""; // survived or deceased color themes
+      let styleClass = "";
 
       if (sex === 'female') {
-        // Female path
         document.getElementById('line-root-female').classList.add('active');
         document.getElementById('node-female').classList.add('active');
 
         if (pclass === 1 || pclass === 2) {
-          // Female high class
           document.getElementById('line-female-high').classList.add('active');
           document.getElementById('node-female-high').classList.add('active');
-          prediction = "생존 예측 (Survived)";
+          prediction = "생존 분류군 (Survival Classification)";
           probability = 94.7;
-          explanation = "최상위 객실층의 유리한 위치와 약자 우선 도덕 규율의 최대 수혜를 입었습니다.";
-          styleClass = "bg-tealAccent-500/10 border-tealAccent-400 text-tealAccent-400";
+          explanation = "여성이며 1·2등석 객실 조건에 합당하여 전반적인 데이터 분포에서 가장 높은 생존 확률을 보입니다.";
+          styleClass = "bg-cyanAccent-500/10 border-cyanAccent-400 text-cyanAccent-400";
         } else {
-          // Female 3rd class
           document.getElementById('line-female-low').classList.add('active');
           document.getElementById('node-female-low').classList.add('active');
-          prediction = "박빙/생존 예측 (Survival Borderline)";
+          prediction = "박빙/생존 경계선 분류 (Survival Borderline)";
           probability = 50.0;
-          explanation = "여성이라는 보호 기준이 적용되었으나, 3등석이라는 공간적 한계 때문에 구조가 반반 확률로 지체되었습니다.";
-          styleClass = "bg-gold-500/10 border-gold-500 text-gold-400";
+          explanation = "여성 조건으로 보호받았으나 3등석 선실이라는 지리적 취약성 때문에 50%의 조건 확률에 머무릅니다.";
+          styleClass = "bg-amberAccent-500/10 border-amberAccent-500 text-amberAccent-400";
         }
       } else {
-        // Male path
         document.getElementById('line-root-male').classList.add('active');
         document.getElementById('node-male').classList.add('active');
 
         if (age <= 10) {
-          // Child male
           document.getElementById('line-male-child').classList.add('active');
           document.getElementById('node-male-child').classList.add('active');
           
           if (pclass === 3) {
-            prediction = "사망 경계 (High Risk)";
+            prediction = "사망 위험군 분류 (High Risk)";
             probability = 40.0;
-            explanation = "어린이었지만 3등석이라는 열악한 선적 배치 때문에 제때 탈출로를 확보하지 못했습니다.";
-            styleClass = "bg-orange-500/10 border-orange-500 text-orange-400";
+            explanation = "어린이 범주에 위치했으나 3등석의 취약한 동선 한계로 인해 최종 생존 비율이 하락했습니다.";
+            styleClass = "bg-amberAccent-500/10 border-amberAccent-500 text-amberAccent-400";
           } else {
-            prediction = "생존 예측 (Survived)";
+            prediction = "생존 분류군 (Survival Classification)";
             probability = 100.0;
-            explanation = "1·2등석의 모든 남성 어린이는 보호 의무 규칙 하에 100% 구조되었습니다.";
-            styleClass = "bg-tealAccent-500/10 border-tealAccent-400 text-tealAccent-400";
+            explanation = "1·2등석 객실의 모든 아동 승객은 위기 상황 대피 기준에 맞춰 최우선 구조된 통계를 보입니다.";
+            styleClass = "bg-cyanAccent-500/10 border-cyanAccent-400 text-cyanAccent-400";
           }
         } else {
-          // Adult male
           document.getElementById('line-male-adult').classList.add('active');
           document.getElementById('node-male-adult').classList.add('active');
-          prediction = "사망 예측 (Deceased)";
+          prediction = "사망 분류군 (Deceased)";
           probability = 16.3;
-          explanation = "성인 남성이란 이유로 생명을 최후순위로 양보할 도덕적 규제를 받아 생존율이 매우 희박합니다.";
+          explanation = "성인 남성 조건은 전체 데이터 수치상 구조 우선순위에서 배제되어 가장 희박한 생존 비율을 갖습니다.";
           styleClass = "bg-rose-950/20 border-rose-500/30 text-rose-400";
         }
       }
 
-      // Update the output HTML elements
       const card = document.getElementById('pred-result-card');
-      card.className = "p-4 rounded-xl border flex items-center justify-between transition-all duration-500 " + styleClass.split(' text-')[0];
+      card.className = "p-4 rounded-xl border flex items-center justify-between transition-all duration-300 " + styleClass.split(' text-')[0];
       
       const label = document.getElementById('pred-label');
-      label.innerText = prediction;
-      label.className = "text-lg font-extrabold " + styleClass.match(/text-\S+/)[0];
+      label.innerText = `${prediction} (Ratio: ${probability.toFixed(1)}%)`;
+      label.className = "text-xs font-extrabold " + styleClass.match(/text-\S+/)[0];
 
       const probText = document.getElementById('pred-prob');
       probText.innerText = probability.toFixed(1) + "%";
-      probText.className = "text-2xl font-extrabold font-serif " + styleClass.match(/text-\S+/)[0];
+      probText.className = "text-xl font-bold font-mono " + styleClass.match(/text-\S+/)[0];
 
       document.getElementById('pred-reason').innerText = explanation;
     }
 
-    // SANDBOX - DATA TABLE AND FILTERING SYSTEM
+    // Passenger Data Filtering & Rendering
     function renderTable() {
       const tbody = document.getElementById('passenger-table-body');
       tbody.innerHTML = '';
@@ -847,8 +710,8 @@
       const pageSlice = filteredList.slice(startIndex, endIndex);
 
       if (pageSlice.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">일치하는 승객 정보가 존재하지 않습니다.</td></tr>`;
-        document.getElementById('table-info-text').innerText = `검색 결과 없음`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">조건에 일치하는 정형 데이터를 도출할 수 없습니다.</td></tr>`;
+        document.getElementById('table-info-text').innerText = `No records matching filters`;
         document.getElementById('btn-prev').disabled = true;
         document.getElementById('btn-next').disabled = true;
         return;
@@ -859,27 +722,26 @@
         tr.className = "hover:bg-white/5 transition-colors border-b border-white/5";
 
         const survivalBadge = p.survived === 1 
-          ? `<span class="px-2 py-0.5 rounded bg-tealAccent-500/10 text-tealAccent-400 font-bold text-[10px]">생존 (Survived)</span>`
-          : `<span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold text-[10px]">사망 (Deceased)</span>`;
+          ? `<span class="px-2 py-0.5 rounded bg-cyanAccent-500/10 text-cyanAccent-400 font-bold text-[10px]">1 (Survived)</span>`
+          : `<span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold text-[10px]">0 (Deceased)</span>`;
 
         const classBadge = p.pclass === 1 
-          ? `<span class="text-purple-400 font-semibold">1등석</span>`
-          : p.pclass === 2 ? `<span class="text-yellow-400 font-semibold">2등석</span>` : `<span class="text-slate-400">3등석</span>`;
+          ? `<span class="text-purple-400 font-semibold">1st Class</span>`
+          : p.pclass === 2 ? `<span class="text-yellow-400 font-semibold">2nd Class</span>` : `<span class="text-slate-500">3rd Class</span>`;
 
         tr.innerHTML = `
           <td class="p-3 text-slate-500 font-mono">${p.id}</td>
           <td class="p-3 font-semibold text-white">${p.name}</td>
-          <td class="p-3 uppercase text-slate-400 text-[10px]">${p.sex === 'female' ? '여성' : '남성'}</td>
+          <td class="p-3 uppercase text-[10px] text-slate-400">${p.sex === 'female' ? '여성' : '남성'}</td>
           <td class="p-3">${p.age}세</td>
           <td class="p-3">${classBadge}</td>
-          <td class="p-3 font-mono text-slate-400">$${p.fare.toFixed(2)}</td>
+          <td class="p-3 font-mono text-slate-500">$${p.fare.toFixed(2)}</td>
           <td class="p-3">${survivalBadge}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      // Update paging buttons
-      document.getElementById('table-info-text').innerText = `총 ${filteredList.length}명 중 ${startIndex + 1} - ${endIndex} 표출`;
+      document.getElementById('table-info-text').innerText = `총 ${filteredList.length}명 중 ${startIndex + 1} - ${endIndex} 로드 완료`;
       document.getElementById('btn-prev').disabled = currentPage === 1;
       document.getElementById('btn-next').disabled = endIndex >= filteredList.length;
     }
@@ -898,7 +760,6 @@
         return matchName && matchSex && matchPclass && matchSurvived;
       });
 
-      // Recalculate live filter counters
       document.getElementById('filtered-count').innerText = filteredList.length;
       
       if (filteredList.length > 0) {
@@ -925,140 +786,6 @@
       if (currentPage < maxPage) {
         currentPage++;
         renderTable();
-      }
-    }
-
-    // AI ETHICS COACHING CONTROLLER (Interactive Questions)
-    let selectedDilemmaId = 1;
-
-    function selectDilemma(id) {
-      selectedDilemmaId = id;
-      
-      // Update Selection Style & Radio checked
-      document.getElementById(`dilemma-radio-${id}`).checked = true;
-      
-      // Reset styles
-      [1, 2].forEach(num => {
-        const card = document.getElementById(`dilemma-card-${num}`);
-        const badge = document.getElementById(`dilemma-badge-${num}`);
-        if(card) {
-          card.className = "cursor-pointer border border-white/10 bg-white/5 rounded-xl p-5 hover:border-gold-500 transition-all duration-300";
-        }
-        if(badge) {
-          badge.className = "text-xs font-bold text-slate-400";
-        }
-      });
-
-      // Apply active style
-      const activeCard = document.getElementById(`dilemma-card-${id}`);
-      activeCard.className = "cursor-pointer border border-gold-500 bg-gold-500/5 rounded-xl p-5 hover:border-gold-500 transition-all duration-300";
-      
-      const textLabel = id === 1 ? "발문 #1에 대한 당신의 견해 기록" : "발문 #2에 대한 당신의 견해 기록";
-      document.getElementById('answer-box-label').innerText = textLabel;
-
-      const placeholderText = id === 1 
-        ? "자본에 따른 대피 차등과 3등석의 배제에 대해 당신의 정의적 정의론적 의견을 작성해 주세요..."
-        : "생명의 가치에 순위를 매기는 위기 규칙의 사회적 정합성 및 공동체 가치에 대한 생각을 적어 주세요...";
-      document.getElementById('ethics-response').placeholder = placeholderText;
-    }
-
-    // Exponential Backoff API Wrapper
-    const apiKey = ""; // Runtime automatically provisions this key
-
-    async function callGemini(promptText, systemInstruction) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [{ parts: [{ text: promptText }] }],
-        systemInstruction: { parts: [{ text: systemInstruction }] }
-      };
-
-      let retries = 5;
-      let delay = 1000;
-
-      while (retries > 0) {
-        try {
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            return result.candidates?.[0]?.content?.parts?.[0]?.text;
-          }
-        } catch (err) {
-          // Fail silently and retry using exponential backoff
-        }
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2;
-        retries--;
-      }
-      throw new Error("가치 분석 에이전트 연결이 원활하지 않습니다. 잠시 후 다시 시도해 주십시오.");
-    }
-
-    async function requestEthicsCoaching() {
-      const userText = document.getElementById('ethics-response').value.trim();
-      const submitBtn = document.getElementById('btn-submit-ethics');
-      const loaderBox = document.getElementById('ai-coaching-box');
-      const responseBox = document.getElementById('ai-coaching-response');
-      const textOutput = document.getElementById('ai-response-text');
-
-      if (!userText) {
-        // Simple elegant custom message instead of browser alert
-        textOutput.innerHTML = `<p class="text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 윤리적 성찰을 도출하기 위해 생각을 최소 몇 글자라도 적어 주세요.</p>`;
-        responseBox.classList.remove('hidden');
-        return;
-      }
-
-      // Show loader, hide response
-      loaderBox.classList.remove('hidden');
-      responseBox.classList.add('hidden');
-      submitBtn.disabled = true;
-      submitBtn.innerText = "코칭 분석을 수행 중...";
-
-      const systemPrompt = `
-        You are 'Prestige Data Ethics Coach', a deep philosophical assistant analyzing data ethics, human dignity, and justice based on Titanic survival data.
-        The user is reviewing the Titanic disaster statistics and answering an ethical dilemma.
-        Your task:
-        1. Read the user's opinion.
-        2. Provide a constructive, deep academic analysis (in sophisticated Korean language).
-        3. Connect their thoughts to formal philosophical concepts:
-           - John Rawls' Theory of Justice (존 롤스의 정의론) / Veil of Ignorance (무지의 장막)
-           - Utilitarianism (공리주의)
-           - Kantian Deontology (칸트의 의무론)
-           - Bioethics and universal human rights (보편적 생명권)
-        4. Maintain a highly respectful, historical, and encouraging tone.
-        5. Format your output elegantly in several structured paragraphs using markdown logic (without nesting markdown blocks).
-      `;
-
-      const promptQuery = `
-        [선택한 딜레마]: ${selectedDilemmaId === 1 ? '발문 #1 (공간과 자본의 위계 - 생명의 가격 등급화)' : '발문 #2 (생명 가치의 동등성과 강제적 보호 규율)'}
-        [사용자 답변 내용]: "${userText}"
-        
-        이 가치 성찰에 대해 윤리적 가이드라인에 기초한 분석 및 대화식 깊은 성찰 피드백을 전달해줘.
-      `;
-
-      try {
-        const responseText = await callGemini(promptQuery, systemPrompt);
-        
-        // Simple parser to turn Markdown to HTML paragraphs comfortably
-        const formattedHtml = responseText
-          .replace(/\n\n/g, '</p><p class="mb-4">')
-          .replace(/\n/g, '<br>')
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gold-400">$1</strong>');
-
-        textOutput.innerHTML = `<p class="mb-4">${formattedHtml}</p>`;
-        
-        // Unhide response and hide loader
-        responseBox.classList.remove('hidden');
-      } catch (err) {
-        textOutput.innerHTML = `<p class="text-rose-400 font-bold"><i class="fa-solid fa-face-frown mr-2"></i> ${err.message}</p>`;
-        responseBox.classList.remove('hidden');
-      } finally {
-        loaderBox.classList.add('hidden');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fa-solid fa-compass"></i> 실시간 AI 윤리 코칭 피드백 요청하기`;
       }
     }
   </script>
